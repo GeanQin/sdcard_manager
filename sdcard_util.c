@@ -20,6 +20,8 @@ typedef struct
 {
     struct sockaddr_nl sa;
     int sock_fd;
+    sdcard_cb_p normal2other;
+    sdcard_cb_p other2normal;
     int partition;
     sdcard_state_e state;
     char dev_name[16];
@@ -276,6 +278,20 @@ static void *sdcard_mount_monitor(void *arg)
         if (manager->state != pre_state)
         {
             printf("sdcard state change from %d to %d\n", pre_state, manager->state);
+            if (manager->state == SDST_NORMAL)
+            {
+                if (manager->other2normal != NULL)
+                {
+                    manager->other2normal();
+                }
+            }
+            else
+            {
+                if (manager->normal2other != NULL)
+                {
+                    manager->normal2other();
+                }
+            }
             pre_state = manager->state;
         }
 
@@ -283,7 +299,7 @@ static void *sdcard_mount_monitor(void *arg)
     }
 }
 
-sdcard_handle sdcard_util_init()
+sdcard_handle sdcard_util_init(sdcard_cb_p normal2other, sdcard_cb_p other2normal)
 {
     sdcard_manager_t *manager = NULL;
     pthread_t sys_tid;
@@ -297,6 +313,8 @@ sdcard_handle sdcard_util_init()
     }
 
     check_sdcard(manager);
+    manager->normal2other = normal2other;
+    manager->other2normal = other2normal;
 
     manager->sock_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_KOBJECT_UEVENT);
     if (manager->sock_fd == -1)
@@ -365,4 +383,11 @@ int sdcard_get_size(sdcard_handle handle, long long *total_kb, long long *free_k
     *free_kb = ((long long)stfs.f_bavail * stfs.f_bsize) / 1024;
 
     return 0;
+}
+
+sdcard_state_e sdcard_get_state(sdcard_handle handle)
+{
+    sdcard_manager_t *manager = (sdcard_manager_t *)handle;
+
+    return manager->state;
 }

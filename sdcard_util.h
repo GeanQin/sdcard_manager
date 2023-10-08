@@ -8,6 +8,7 @@ extern "C"
 #endif
 
 typedef void *sdcard_handle;
+typedef int (*sdcard_cb_p) ();
 
 typedef enum
 {
@@ -21,8 +22,9 @@ typedef enum
     SDST_EJECTING
 } sdcard_state_e;
 
-sdcard_handle sdcard_util_init();
+sdcard_handle sdcard_util_init(sdcard_cb_p normal2other, sdcard_cb_p other2normal);
 int sdcard_get_size(sdcard_handle handle, long long *total_kb, long long *free_kb);
+sdcard_state_e sdcard_get_state(sdcard_handle handle);
 void sdcard_util_deinit(sdcard_handle handle);
 
 #ifdef __cplusplus

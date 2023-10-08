@@ -6,9 +6,19 @@
 
 #include "sdcard_util.h"
 
+static void n2o_cb()
+{
+    printf("n2o_cb\n");
+}
+
+static void o2n_cb()
+{
+    printf("o2n_cb\n");
+}
+
 int main()
 {
-    sdcard_handle handle = sdcard_util_init();
+    sdcard_handle handle = sdcard_util_init((void *)n2o_cb, (void *)o2n_cb);
     long long total_kb = 0;
     long long free_kb = 0;
 
@@ -19,6 +29,7 @@ int main()
         //     printf("total=%lld\n", total_kb);
         //     printf("free=%lld\n", free_kb);
         // }
+        printf("sdcard state=%d\n", sdcard_get_state(handle));
         sleep(2);
     }
 
